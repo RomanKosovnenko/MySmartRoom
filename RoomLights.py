@@ -11,16 +11,16 @@ BledStrip_gpio = None
 WledStrip_gpio = None
 
 #LEDout_gpio
-isOnled_gpio = 7
-pirOnOffLed_gpio = None
-LedStripModeStatusLed_gpio = None
-BulbModeStatusLed_gpio = None
+isOnled_gpio = 40
+pirOnOffLed_gpio = 15
+LedStripModeStatusLed_gpio = 38
+BulbModeStatusLed_gpio = 36
 
 #input_gpio
 pir_gpio = 11
-pirOnOffBtn_gpio = None
-onOffManualBtn_gpio = None
-changeModeBtn_gpio = None
+pirOnOffBtn_gpio = 13
+onOffManualBtn_gpio = 31
+changeModeBtn_gpio = 29
 
 #flags
 isOn = False
@@ -34,7 +34,7 @@ lightMode = 1
 #PIR mode settings
 night_start = time(16)
 night_end = time(5)
-timeOn_duration = 300
+timeOn_duration = 10
 timeWhenPirRestart = None
 
 
@@ -50,6 +50,7 @@ def pirOnOffBtn_callback(channel):
     changePirStatus()
     if isPirStopped:
         timeWhenPirRestart = (datetime.now() + timedelta(days=1)).date().strftime("%d/%m/%Y")
+        print(timeWhenPirRestart)
     else:
         timeWhenPirRestart = None
         
@@ -61,35 +62,42 @@ def changeModeBtn_callback(channel):
     global lightMode
     if lightMode == 1:
         lightMode = 2
-        GPIO.outpit(LedStripModeStatusLed_gpio, True)
-        GPIO.outpit(BulbModeStatusLed_gpio, False)
+        GPIO.output(LedStripModeStatusLed_gpio, True)
+        GPIO.output(BulbModeStatusLed_gpio, False)
         return
     if lightMode == 2:
         lightMode = 3
-        GPIO.outpit(LedStripModeStatusLed_gpio, True)
-        GPIO.outpit(BulbModeStatusLed_gpio, True)
+        GPIO.output(LedStripModeStatusLed_gpio, True)
+        GPIO.output(BulbModeStatusLed_gpio, True)
         return
     if lightMode == 3:
         lightMode = 1
-        GPIO.outpit(LedStripModeStatusLed_gpio, False)
-        GPIO.outpit(BulbModeStatusLed_gpio, True)
+        GPIO.output(LedStripModeStatusLed_gpio, False)
+        GPIO.output(BulbModeStatusLed_gpio, True)
         return
 
 def togleLight():
+    global isOn
+    
     if not isOn:
+        isOn = True
         if lightMode == 1 or lightMode == 3:
             bulb.turn_on()
         elif lightMode == 2 or lightMode == 3:
             print("Led strip is On")
     else:
+        isOn = False
         if lightMode == 1 or lightMode == 3:
             bulb.turn_off()
         elif lightMode == 2 or lightMode == 3:
             print("Led strip is Off")
+    GPIO.output(isOnled_gpio, isOn)
+    print(isOn)
 
 def changePirStatus():
+    global isPirStopped
     isPirStopped = not isPirStopped
-    GPIO.outpit(pirOnOffLed_gpio, isPirStopped)
+    GPIO.output(pirOnOffLed_gpio, isPirStopped)
 
 def checkPirRestart(isStillNight):
     global timeWhenPirRestart
@@ -126,7 +134,16 @@ GPIO.add_event_detect(pirOnOffBtn_gpio, GPIO.RISING, callback=pirOnOffBtn_callba
 GPIO.add_event_detect(onOffManualBtn_gpio, GPIO.RISING, callback=onOffManualBtn_callback)
 GPIO.add_event_detect(changeModeBtn_gpio, GPIO.RISING, callback=changeModeBtn_callback)
 
+GPIO.output(LedStripModeStatusLed_gpio, False)
+GPIO.output(BulbModeStatusLed_gpio, True)
+
+
 bulb = Bulb(bulb_ip)
+
+if checkBulbPowerStatus() == 'on':
+    isOn = True
+    GPIO.output(isOnled_gpio, isOn)
+
 
 while True:
     isStillNight = isNight()
@@ -136,14 +153,12 @@ while True:
     if isStillNight and not isPirStopped and checkBulbPowerStatus() != 'on':
         if GPIO.input(pir_gpio) == 0:
         # if True:
-            GPIO.outpit(isOnled_gpio, False)
             timer.sleep(2)
         if GPIO.input(pir_gpio) == 1:
         # if False:
-            GPIO.outpit(isOnled_gpio, True)
             togleLight()
             timer.sleep(timeOn_duration)
             if not isPirStopped:
-                bulb.turn_off()
+                togleLight()
     else:
         timer.sleep(10)
