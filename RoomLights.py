@@ -47,15 +47,13 @@ def isNight(city: str='Berlin'):
     :param city: String name of interested city.
         The list of supported cities could be found here: 
         https://astral.readthedocs.io/en/latest/#cities
-
-
     """
     astral = Astral()
     astral_location = astral[city]
     current_time = datetime.now(pytz.utc)
 
     sun_information = astral_location.sun(date=current_time, local=False) # Gets time of sunrise and sunset
-
+    # It is early morning (before sun dawn) or late evening (after sun dusk).
     return sun_information['dawn'] >= current_time or sun_information['dusk'] <= current_time   
 
 
