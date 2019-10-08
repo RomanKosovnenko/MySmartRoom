@@ -1,7 +1,7 @@
 from datetime import datetime, time, date, datetime, timedelta
 from yeelight import Bulb
 
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time as timer
 
 #LedStripControl_gpio
@@ -61,18 +61,18 @@ def changeModeBtn_callback(channel):
     global lightMode
     if lightMode == 1:
         lightMode = 2
-        # GPIO.outpit(LedStripModeStatusLed_gpio, True)
-        # GPIO.outpit(BulbModeStatusLed_gpio, False)
+        GPIO.outpit(LedStripModeStatusLed_gpio, True)
+        GPIO.outpit(BulbModeStatusLed_gpio, False)
         return
     if lightMode == 2:
         lightMode = 3
-        # GPIO.outpit(LedStripModeStatusLed_gpio, True)
-        # GPIO.outpit(BulbModeStatusLed_gpio, True)
+        GPIO.outpit(LedStripModeStatusLed_gpio, True)
+        GPIO.outpit(BulbModeStatusLed_gpio, True)
         return
     if lightMode == 3:
         lightMode = 1
-        # GPIO.outpit(LedStripModeStatusLed_gpio, False)
-        # GPIO.outpit(BulbModeStatusLed_gpio, True)
+        GPIO.outpit(LedStripModeStatusLed_gpio, False)
+        GPIO.outpit(BulbModeStatusLed_gpio, True)
         return
 
 def togleLight():
@@ -89,7 +89,7 @@ def togleLight():
 
 def changePirStatus():
     isPirStopped = not isPirStopped
-    # GPIO.outpit(pirOnOffLed_gpio, isPirStopped)
+    GPIO.outpit(pirOnOffLed_gpio, isPirStopped)
 
 def checkPirRestart(isStillNight):
     global timeWhenPirRestart
@@ -111,11 +111,20 @@ def checkBulbPowerStatus():
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(led_gpio, GPIO.OUT)
+
+GPIO.setup(isOnled_gpio, GPIO.OUT)
+GPIO.setup(pirOnOffLed_gpio, GPIO.OUT)
+GPIO.setup(LedStripModeStatusLed_gpio, GPIO.OUT)
+GPIO.setup(BulbModeStatusLed_gpio, GPIO.OUT)
+
 GPIO.setup(pir_gpio, GPIO.IN)
-GPIO.add_event_detect(pirOnOffBtn_gpio, GPIO.RISING,callback=pirOnOffBtn_callback)
-GPIO.add_event_detect(onOffManualBtn_gpio, GPIO.RISING,callback=onOffManualBtn_callback)
-GPIO.add_event_detect(changeModeBtn_gpio, GPIO.RISING,callback=changeModeBtn_callback)
+GPIO.setup(pirOnOffBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(onOffManualBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(changeModeBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+GPIO.add_event_detect(pirOnOffBtn_gpio, GPIO.RISING, callback=pirOnOffBtn_callback)
+GPIO.add_event_detect(onOffManualBtn_gpio, GPIO.RISING, callback=onOffManualBtn_callback)
+GPIO.add_event_detect(changeModeBtn_gpio, GPIO.RISING, callback=changeModeBtn_callback)
 
 bulb = Bulb(bulb_ip)
 
@@ -127,11 +136,11 @@ while True:
     if isStillNight and not isPirStopped and checkBulbPowerStatus() != 'on':
         if GPIO.input(pir_gpio) == 0:
         # if True:
-            GPIO.outpit(led_gpio, False)
+            GPIO.outpit(isOnled_gpio, False)
             timer.sleep(2)
         if GPIO.input(pir_gpio) == 1:
         # if False:
-            GPIO.outpit(led_gpio, True)
+            GPIO.outpit(isOnled_gpio, True)
             togleLight()
             timer.sleep(timeOn_duration)
             if not isPirStopped:
