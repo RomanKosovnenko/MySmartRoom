@@ -1,8 +1,10 @@
 from datetime import datetime, time, date, datetime, timedelta
 from yeelight import Bulb
+from astral import Astral
 
 import RPi.GPIO as GPIO
 import time as timer
+import pytz
 
 #LedStripControl_gpio
 RledStrip_gpio = None
@@ -32,19 +34,28 @@ bulb_ip = "192.168.178.186"
 lightMode = 1
 
 #PIR mode settings
-night_start = time(16)
-night_end = time(5)
 timeOn_duration = 10
 timeWhenPirRestart = None
 
 
 
-def isNight():
-    now = datetime.now().time()
-    if night_start <= night_end:
-        return night_start <= now < night_end
-    else:
-        return night_start <= now or now < night_end
+def isNight(city: str='Berlin'):
+    """
+    Checks if it is a night in the provided city.
+    The list of the cities is supported by the Astral library.
+    
+    :param city: String name of interested city.
+        The list of supported cities could be found here: 
+        https://astral.readthedocs.io/en/latest/#cities
+    """
+    astral = Astral()
+    astral_location = astral[city]
+    current_time = datetime.now(pytz.utc)
+
+    sun_information = astral_location.sun(date=current_time, local=False) # Gets time of sunrise and sunset
+    # It is early morning (before sun dawn) or late evening (after sun dusk).
+    return sun_information['dawn'] >= current_time or sun_information['dusk'] <= current_time   
+
 
 def pirOnOffBtn_callback(channel):
     changePirStatus()
