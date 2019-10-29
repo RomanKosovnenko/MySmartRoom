@@ -13,6 +13,7 @@ BledStrip_gpio = None
 WledStrip_gpio = None
 
 #LEDout_gpio
+areLED_indicators_enabled = True
 isOnled_gpio = 40
 pirOnOffLed_gpio = 15
 LedStripModeStatusLed_gpio = 38
@@ -23,6 +24,7 @@ pir_gpio = 11
 pirOnOffBtn_gpio = 13
 onOffManualBtn_gpio = 31
 changeModeBtn_gpio = 29
+onOffLEDIndicatorsBtn_gpio = 33
 
 #flags
 isOn = False
@@ -69,23 +71,41 @@ def pirOnOffBtn_callback(channel):
 def onOffManualBtn_callback(channel):
     togleLight()
 
+def updateLED_indicators():
+    if areLED_indicators_enabled:
+        
+        GPIO.output(isOnled_gpio, isOn)
+        GPIO.output(pirOnOffLed_gpio, isPirStopped)
+
+        # Change modes indicators according to mode
+        if lightMode == 1: # Only Bulb will be turned on
+            GPIO.output(LedStripModeStatusLed_gpio, False)
+            GPIO.output(BulbModeStatusLed_gpio, True)
+        elif lightMode == 2: # Only LED will be turned on
+            GPIO.output(LedStripModeStatusLed_gpio, True)
+            GPIO.output(BulbModeStatusLed_gpio, False)
+        elif lightMode == 3: # Both LED and Bulb will be turned on
+            GPIO.output(LedStripModeStatusLed_gpio, True)
+            GPIO.output(BulbModeStatusLed_gpio, True)
+        else:
+            GPIO.output(LedStripModeStatusLed_gpio, False)
+            GPIO.output(BulbModeStatusLed_gpio, False)
+            print("Unexpected lightMode: %s" % lightMode)
+    else:
+        for led in [LedStripModeStatusLed_gpio, BulbModeStatusLed_gpio, isOnled_gpio, pirOnOffLed_gpio]:
+            GPIO.output(led, False)
+
 def changeModeBtn_callback(channel):
     global lightMode
     if lightMode == 1:
         lightMode = 2
-        GPIO.output(LedStripModeStatusLed_gpio, True)
-        GPIO.output(BulbModeStatusLed_gpio, False)
-        return
-    if lightMode == 2:
+    elif lightMode == 2:
         lightMode = 3
-        GPIO.output(LedStripModeStatusLed_gpio, True)
-        GPIO.output(BulbModeStatusLed_gpio, True)
-        return
-    if lightMode == 3:
+    elif lightMode == 3:
         lightMode = 1
-        GPIO.output(LedStripModeStatusLed_gpio, False)
-        GPIO.output(BulbModeStatusLed_gpio, True)
-        return
+    else:
+        print("Unexpected lightMode: %s" % lightMode)
+    updateLED_indicators()
 
 def togleLight():
     global isOn
@@ -128,6 +148,11 @@ def checkBulbPowerStatus():
     props = bulb.get_properties(['power'])
     return props['power']
 
+def OnOffLEDInticators_callback(channel):
+    global areLED_indicators_enabled
+    areLED_indicators_enabled = not areLED_indicators_enabled
+    updateLED_indicators()
+
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
@@ -140,10 +165,12 @@ GPIO.setup(pir_gpio, GPIO.IN)
 GPIO.setup(pirOnOffBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(onOffManualBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(changeModeBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(onOffLEDIndicatorsBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 GPIO.add_event_detect(pirOnOffBtn_gpio, GPIO.RISING, callback=pirOnOffBtn_callback)
 GPIO.add_event_detect(onOffManualBtn_gpio, GPIO.RISING, callback=onOffManualBtn_callback)
 GPIO.add_event_detect(changeModeBtn_gpio, GPIO.RISING, callback=changeModeBtn_callback)
+GPIO.add_event_detect(OnOffLEDInticators_callback, GPIO,RISING, callback=OnOffLEDInticators_callback)
 
 GPIO.output(LedStripModeStatusLed_gpio, False)
 GPIO.output(BulbModeStatusLed_gpio, True)
