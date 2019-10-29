@@ -13,7 +13,6 @@ BledStrip_gpio = None
 WledStrip_gpio = None
 
 #LEDout_gpio
-areLED_indicators_enabled = True
 isOnled_gpio = 40
 pirOnOffLed_gpio = 15
 LedStripModeStatusLed_gpio = 38
@@ -27,6 +26,7 @@ changeModeBtn_gpio = 29
 onOffLEDIndicatorsBtn_gpio = 33
 
 #flags
+areLED_indicators_enabled = True
 isOn = False
 isPirStopped = False
 
@@ -170,7 +170,7 @@ GPIO.setup(onOffLEDIndicatorsBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.add_event_detect(pirOnOffBtn_gpio, GPIO.RISING, callback=pirOnOffBtn_callback)
 GPIO.add_event_detect(onOffManualBtn_gpio, GPIO.RISING, callback=onOffManualBtn_callback)
 GPIO.add_event_detect(changeModeBtn_gpio, GPIO.RISING, callback=changeModeBtn_callback)
-GPIO.add_event_detect(OnOffLEDInticators_callback, GPIO,RISING, callback=OnOffLEDInticators_callback)
+GPIO.add_event_detect(onOffLEDIndicatorsBtn_gpio, GPIO,RISING, callback=OnOffLEDInticators_callback)
 
 GPIO.output(LedStripModeStatusLed_gpio, False)
 GPIO.output(BulbModeStatusLed_gpio, True)
