@@ -172,7 +172,7 @@ GPIO.setup(onOffLEDIndicatorsBtn_gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.add_event_detect(pirOnOffBtn_gpio, GPIO.RISING, callback=pirOnOffBtn_callback)
 GPIO.add_event_detect(onOffManualBtn_gpio, GPIO.RISING, callback=onOffManualBtn_callback)
 GPIO.add_event_detect(changeModeBtn_gpio, GPIO.RISING, callback=changeModeBtn_callback)
-GPIO.add_event_detect(onOffLEDIndicatorsBtn_gpio, GPIO,RISING, callback=OnOffLEDInticators_callback)
+GPIO.add_event_detect(onOffLEDIndicatorsBtn_gpio, GPIO.RISING, callback=OnOffLEDInticators_callback)
 
 changeStatusofLed(LedStripModeStatusLed_gpio, False)
 changeStatusofLed(BulbModeStatusLed_gpio, True)
