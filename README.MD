@@ -20,3 +20,6 @@ Raspberry Py changes the state of the LED Bulb in one of specified scenarios by 
     - [ ] Connect strip to Raspberry.
     - [ ] Add management logic to Raspberry.
 
+## Ideas
+
+- Control light with Google Assistant ([tutorial](https://medium.com/@kevalpatel2106/turn-your-raspberry-pi-into-homemade-google-home-9e29ad220075))
